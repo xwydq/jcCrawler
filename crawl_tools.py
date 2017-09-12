@@ -153,3 +153,37 @@ class ScrollStop:
             return False
 
 
+# 文本解析（日期、标题、正文）
+class HtmlExtract:
+    def __init__(self):
+        self.PAUSE = 5.5
+        self.TESTTAGS = {'www.sohu.com': u'//*[@class="article-oper"]//text()'}
+
+    # parse baidu url to actual url
+    def stop_scroll(self, driver, catgory_url):
+        try:
+            lastHeight = driver.execute_script("return document.body.scrollHeight")
+            while True:
+                driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                time.sleep(self.PAUSE)
+                newHeight = driver.execute_script("return document.body.scrollHeight")
+                print(newHeight)
+
+                if (catgory_url in self.TESTTAGS):
+                    html_page = driver.page_source
+                    html_page = html_page.encode('utf-8')
+                    html = etree.HTML(html_page)
+
+                    testTag = html.xpath(self.TESTTAGS[catgory_url])
+                    testTag = ''.join(testTag)
+
+                    if newHeight == lastHeight or lastHeight > 20000 or testTag <> '':
+                        break
+                    lastHeight = newHeight
+                else:
+                    if newHeight == lastHeight:
+                        break
+                    lastHeight = newHeight
+            return True
+        except:
+            return False
