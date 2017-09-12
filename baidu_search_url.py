@@ -3,7 +3,7 @@
 # def real_url(url):
 #     driver.get(url)
 #     return driver.current_url
-
+# test
 def real_url(url):
     try:
         response = urllib2.urlopen(url)
