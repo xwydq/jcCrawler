@@ -9,7 +9,7 @@ import time
 
 class CrawlDatabaseManager:
     DB_NAME = 'jc_crawl'
-    SERVER_IP = '172.16.0.116'
+    SERVER_IP = '172.16.0.1'
 
     TABLES = {}
 
