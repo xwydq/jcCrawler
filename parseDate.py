@@ -6,9 +6,15 @@ from datetime import datetime
 
 class DateExtract:
     def __init__(self):
-        self.patternList = ["(\d{4})([0|1]\d)([0-3]\d)", "(\d{4})(\d)([0-3]\d)", "(\d{4})(\d)(\d)",
-                            "(\d{4})/([0|1]\d)/([0-3]\d)", "(\d{4})/(\d)/([0-3]\d)", "(\d{4})/(\d)/(\d)",
-                            "(\d{4})-([0|1]\d)-([0-3]\d)", "(\d{4})-(\d)-([0-3]\d)", "(\d{4})-(\d)-(\d)"]
+        self.patternList = ["(\d{4})([0|1]\d)([0-3]\d)", "(\d{4})([0|1]\d)(\d)", "(\d{4})(\d)([0-3]\d)",
+                            "(\d{4})(\d)(\d)",
+                            "(\d{4})/([0|1]\d)/([0-3]\d)", "(\d{4})/([0|1]\d)/(\d)", "(\d{4})/(\d)/([0-3]\d)",
+                            "(\d{4})/(\d)/(\d)",
+                            "(\d{4})-([0|1]\d)-([0-3]\d)", "(\d{4})-([0|1]\d)-(\d)", "(\d{4})-(\d)-([0-3]\d)",
+                            "(\d{4})-(\d)-(\d)",
+                            "(\d{4})-([0|1]\d)/([0-3]\d)", "(\d{4})-(\d)/([0-3]\d)", "(\d{4})-(\d)/(\d)",
+                            "(\d{4})([0|1]\d)/([0-3]\d)", "(\d{4})([0|1]\d)/(\d)", "(\d{4})(\d)/([0-3]\d)",
+                            "(\d{4})(\d)/(\d)"]
 
         self.patternList = map(lambda x: re.compile(x), self.patternList)
         self.dateNow = datetime.now().strftime('%Y-%m-%d')
@@ -34,6 +40,10 @@ class DateExtract:
             # re.findall(x, url_str)
 
     def extractUrlDate(self, url_str):
+        if isinstance(url_str, unicode):
+            url_str = url_str.encode('utf-8')
+        url_str = re.sub('年|月|日| ', '', url_str)
+        # print(url_str)
         m_str = map(lambda x: re.findall(x, url_str), self.patternList)
         # print(m_str)
         # print(m_str == None)

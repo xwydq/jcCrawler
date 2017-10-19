@@ -13,6 +13,8 @@ import hashlib
 import sys
 import urllib2
 from crawl_tools import CrawlTools
+import subprocess
+import os
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -21,6 +23,8 @@ ctls = CrawlTools()
 
 db_manager = CrawlDatabaseManager(10)
 pause = 5.5
+grephant = "pgrep phantomjs"
+
 # keywords = [u"金诚集团", u"PPP", u"特色小镇", u"金诚新城镇", u"金诚财富"]
 keywords = ["金诚集团", "PPP", "特色小镇", "金诚新城镇", "金诚财富"]
 keywords = map(lambda x: quote(x), keywords)
@@ -53,12 +57,34 @@ for key, value in request_headers.iteritems():
 cleaner = clean.Cleaner(style=True, scripts=True, comments=True, javascript=True, page_structure=False,
                         safe_attrs_only=False)
 
+## grep pid start phantomjs
+try:
+    phant_start = subprocess.check_output(grephant, shell=True)
+    phant_start = phant_start.strip()
+    phant_start = phant_start.split('\n')
+except:
+    phant_start = []
+phant_start = set(phant_start)
+
+
 # load PhantomJS driver
 # driver = webdriver.PhantomJS(executable_path = '/usr/lib/node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs',
 #                              service_args=['--ignore-ssl-errors=true']) # set window size, better to fit the whole page in order to
 driver = webdriver.PhantomJS(
     service_args=['--ignore-ssl-errors=true'])  # set window size, better to fit the whole page in order to
 driver.set_window_size(1280, 2400)  # optional
+
+## grep pid end phantomjs
+try:
+    phant_end = subprocess.check_output(grephant, shell=True)
+    phant_end = phant_end.strip()
+    phant_end = phant_end.split('\n')
+except:
+    phant_end = []
+phant_end = set(phant_end)
+
+phant_pid = phant_end - phant_start
+
 
 while True:
     db_manager.init_catorgy_url()
@@ -178,3 +204,7 @@ while True:
                     next
 
     db_manager.finish_catorgy_url(c_url['id'])
+
+## kill pid
+for pi in phant_pid:
+    os.system('kill -9 %s' % pi)

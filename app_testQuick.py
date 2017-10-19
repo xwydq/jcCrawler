@@ -1,27 +1,35 @@
 # -*- coding: utf-8 -*-
-# import dbmanager
-# https://github.com/Chyroc/WechatSogou
-# 复制客户端的历史消息--浏览器--复制浏览器URL
 from selenium import webdriver
-import selenium
-import os
-from dbmanager import CrawlDatabaseManager
 from lxml.html import clean
 from crawl_tools import CrawlTools
 from crawl_tools import ScrollStop
+from crawl_tools import HtmlExtract
+import os
 import subprocess
+import sys
+
+###
+catorgy_url = sys.argv[1]
+cur_url = sys.argv[2]
+# print(catorgy_url)
+# print(cur_url)
+###
+
+###
+# cur_url = 'http://www.huaian.gov.cn/xwzx/qxkx/content/5e38cfba5cb05b77015cd3e2cd9c4a3a.html'
+# catorgy_url = 'www.huaian.gov.cn'
+###
 
 
 ctls = CrawlTools()
-ctls.chdir_p()
-
 scsp = ScrollStop()
+hext = HtmlExtract()
 
-db_manager = CrawlDatabaseManager(10)
-
-grephant = "pgrep phantomjs"
-
+wpth = '/home/jc/projectJC/crawler/back_conf/'
+filename = 'exam'
+filepath = wpth + filename + '/' + filename + '.html'
 pause = 5.5
+grephant = "pgrep phantomjs"
 
 request_headers = {
     'connection': "keep-alive",
@@ -39,7 +47,6 @@ for key, value in request_headers.iteritems():
 cleaner = clean.Cleaner(style=True, scripts=True, comments=True, javascript=True, page_structure=False,
                         safe_attrs_only=False)
 
-
 ## grep pid start phantomjs
 try:
     phant_start = subprocess.check_output(grephant, shell=True)
@@ -49,14 +56,9 @@ except:
     phant_start = []
 phant_start = set(phant_start)
 
-
-# load PhantomJS driver
-# driver = webdriver.PhantomJS(executable_path = '/usr/lib/node_modules/phantomjs-prebuilt/lib/phantom/bin/phantomjs',
-#                              service_args=['--ignore-ssl-errors=true']) # set window size, better to fit the whole page in order to
 driver = webdriver.PhantomJS(
     service_args=['--ignore-ssl-errors=true'])  # set window size, better to fit the whole page in order to
 driver.set_window_size(1280, 2400)  # optional
-
 
 ## grep pid end phantomjs
 try:
@@ -66,52 +68,41 @@ try:
 except:
     phant_end = []
 phant_end = set(phant_end)
-
 phant_pid = phant_end - phant_start
 
 
-while True:
-    db_manager.init_crawl_url()
-    c_url = db_manager.dequeue_crawl_url()
-    print(c_url)
-
-    if c_url == None:
-        break
-    else:
-        cur_url = c_url['url']
-        print(cur_url)
-
-        try:
-
-            driver.get(cur_url)
-
-            scsp.stop_scroll(driver, c_url['catorgy_url'])
-
-            content = driver.page_source
-
-            html_page = driver.page_source
-            html_page = html_page.encode('utf-8')
+## clean
+open(wpth + filename + '/' + 'url_releasetime', "w").close()
+open(wpth + filename + '/' + 'url_title', "w").close()
+open(wpth + filename + '/' + 'url_content', "w").close()
 
 
-            md5str = c_url['url_md5']
+## download html
+driver.get(cur_url)
+scsp.stop_scroll(driver, catorgy_url)
 
-            file_html = md5str + "." + "html"
-            file_png = md5str + "." + "png"
-            # txtname = md5str + "." + "txt"
+content = driver.page_source
+html_page = driver.page_source
+html_page = html_page.encode('utf-8')
 
-            print(os.getcwd())
-            ctls.mkdir_p(md5str)
+fo = open(filepath, 'wb+')
+fo.write(html_page)
+fo.close()
 
-            fo = open("%s/%s" % (md5str, file_html), 'wb+')
-            fo.write(html_page)
-            fo.close()
 
-            # save png
-            driver.save_screenshot("%s/%s" % (md5str, file_png))
-            # driver.save_screenshot()
-        except:
-            next
-    db_manager.finish_crawl_url(c_url['id'])
+
+## extract
+hext.FPATH = wpth
+extract_info = hext.url_extract(filename, catorgy_url, cur_url)
+
+## insert text info
+for key, value in extract_info.items():
+    if value is not None:
+        print(key)
+        print(extract_info[key])
+        text_file = open(wpth + filename + '/' + key, "w")
+        text_file.write(extract_info[key])
+        text_file.close()
 
 
 ## kill pid
